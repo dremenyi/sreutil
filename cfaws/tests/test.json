@@ -1,0 +1,154 @@
+{
+    "schemaVersion": "2.2",
+    "description": "Pull S3 zip, extract, and run Ansible playbook on Windows",
+    "parameters": {
+      "S3BucketName": {
+        "type": "String",
+        "description": "The name of the S3 bucket"
+      },
+      "S3Key": {
+        "type": "String",
+        "description": "The key of the zip file in the S3 bucket"
+      },
+      "DestinationPath": {
+        "type": "String",
+        "description": "The path to save the zip file and extract contents"
+      },
+      "ZipFileName": {
+        "type": "String",
+        "description": "The name of the zip file"
+      },
+      "ZipFileExtracted": {
+        "type": "String",
+        "description": "The name of the extracted file"
+      },
+      "PlaybookName": {
+        "type": "String",
+        "description": "The name of the playbook"
+      }
+    },
+    "mainSteps": [
+        {
+            "action": "aws:runPowerShellScript",
+            "name": "checkAndInstallPython",
+            "inputs": {
+              "runCommand": [
+                "if (-not (Get-Command python -ErrorAction SilentlyContinue)) {",
+                "    Write-Output 'Python not found. Installing...';",
+                "    Invoke-WebRequest -Uri 'https://www.python.org/ftp/python/3.9.5/python-3.9.5-amd64.exe' -OutFile 'C:\\Temp\\python-3.9.5-amd64.exe';",
+                "    Start-Process 'C:\\Temp\\python-3.9.5-amd64.exe' -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1' -Wait;",
+                "    Remove-Item 'C:\\Temp\\python-3.9.5-amd64.exe';",
+                "    Write-Output 'Python installed successfully';",
+                "} else {",
+                "    Write-Output 'Python is already installed';",
+                "}"
+              ]
+            }
+        },
+        {
+            "action": "aws:runPowerShellScript",
+            "name": "addPythonToPath",
+            "inputs": {
+              "runCommand": [
+                "$env:Path += ';C:\\Python39';",
+                "[System.Environment]::SetEnvironmentVariable('Path', $env:Path, [System.EnvironmentVariableTarget]::Machine);",
+                "Write-Output 'Python added to system PATH';"
+              ]
+            }
+          },
+      {
+        "action": "aws:runPowerShellScript",
+        "name": "checkAndInstallAWSCLI",
+        "inputs": {
+          "runCommand": [
+            "if (-not (Get-Command aws -ErrorAction SilentlyContinue)) {",
+            "    Write-Output 'AWS CLI not found. Installing...';",
+            "    Invoke-WebRequest -Uri 'https://awscli.amazonaws.com/AWSCLIV2.msi' -OutFile 'C:\\Temp\\AWSCLIV2.msi';",
+            "    Start-Process msiexec.exe -ArgumentList '/I C:\\Temp\\AWSCLIV2.msi /quiet' -Wait;",
+            "    Remove-Item 'C:\\Temp\\AWSCLIV2.msi';",
+            "    Write-Output 'AWS CLI installed successfully';",
+            "} else {",
+            "    Write-Output 'AWS CLI is already installed';",
+            "}"
+          ]
+        }
+      },
+      {
+        "action": "aws:runPowerShellScript",
+        "name": "checkAndInstallAnsible",
+        "inputs": {
+          "runCommand": [
+            "if (-not (Get-Command ansible -ErrorAction SilentlyContinue)) {",
+            "    Write-Output 'Ansible not found. Installing...';",
+            "    Invoke-WebRequest -Uri 'https://bootstrap.pypa.io/get-pip.py' -OutFile 'C:\\Temp\\get-pip.py';",
+            "    python C:\\Temp\\get-pip.py;",
+            "    Remove-Item 'C:\\Temp\\get-pip.py';",
+            "    pip install ansible;",
+            "    Write-Output 'Ansible installed successfully';",
+            "} else {",
+            "    Write-Output 'Ansible is already installed';",
+            "}"
+          ]
+        }
+      },
+      {
+        "action": "aws:runPowerShellScript",
+        "name": "downloadAndExtractS3Zip",
+        "inputs": {
+          "runCommand": [
+            "aws s3 cp s3://{{ S3BucketName }}/{{ S3Key }} {{ DestinationPath }}\\{{ ZipFileName }}",
+            "Expand-Archive -Path {{ DestinationPath }}\\{{ ZipFileName }} -DestinationPath {{ DestinationPath }}\\{{ ZipFileExtracted }}"
+          ]
+        }
+      },
+      {
+        "action": "aws:runPowerShellScript",
+        "name": "runAnsiblePlaybook",
+        "inputs": {
+          "runCommand": [
+            "cd {{ DestinationPath }}\\{{ ZipFileExtracted }}",
+            "ansible-playbook {{ PlaybookName }}.yml"
+          ]
+        }
+      }
+    ]
+  }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+######

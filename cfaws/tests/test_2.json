@@ -1,0 +1,52 @@
+{
+    "schemaVersion": "2.2",
+    "description": "Pull S3 zip, extract, and run Ansible playbook on Windows",
+    "parameters": {
+      "S3BucketName": {
+        "type": "String",
+        "description": "The name of the S3 bucket"
+      },
+      "S3Key": {
+        "type": "String",
+        "description": "The key of the zip file in the S3 bucket"
+      },
+      "DestinationPath": {
+        "type": "String",
+        "description": "The path to save the zip file and extract contents"
+      },
+      "ZipFileName": {
+        "type": "String",
+        "description": "The name of the zip file"
+      },
+      "ZipFileExtracted": {
+        "type": "String",
+        "description": "The name of the extracted file"
+      },
+      "PlaybookName": {
+        "type": "String",
+        "description": "The name of the playbook"
+      }
+    },
+    "mainSteps": [
+      
+    ]
+  }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    
+  
+  
+  
+  
+  
+  
+  
+  

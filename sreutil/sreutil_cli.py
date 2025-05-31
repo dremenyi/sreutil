@@ -251,11 +251,6 @@ def main():
     download_s3_file_parser.add_argument('--bucket', required=True, help='Name of the S3 bucket.') # Made required
     download_s3_file_parser.add_argument('--key', default='', help='S3 key prefix or full key of the file(s) to download (default: all files).')
     download_s3_file_parser.add_argument('--output-dir', default=os.getcwd(), help='Directory to save downloaded files (default: current directory).')
-    # The s3_download_file function in S3/s3_download_file.py expects (profile, bucket, key, output_dir)
-    # The original cf_aws_cli.py didn't pass region to this specific lambda.
-    # For consistency, it's good if s3_download_file can accept a region or if the session inside it handles region correctly.
-    # Assuming s3_download_file uses the profile to establish a session that might include region.
-    # For now, matching the lambda structure. If s3_download_file needs region, adjust its signature and this call.
     download_s3_file_parser.set_defaults(func=lambda args_s3_dl: s3_download_file(args_s3_dl.profile, args_s3_dl.bucket, args_s3_dl.key, args_s3_dl.output_dir))
 
 
@@ -325,11 +320,16 @@ def main():
     parser_iam_assume_role.add_argument('--token', required=True, help='Your MFA token code.')
     parser_iam_assume_role.set_defaults(func=iam_set_role)
 
-    # --- PYAWS SECRETSMANAGER Commands ---
-    parser_sm_list_secrets = pyaws_subparsers.add_parser('sm-list-secrets', help='List secrets in Secrets Manager (filtered by common paths).')
+# --- PYAWS SECRETSMANAGER Commands ---
+    parser_sm_list_secrets = pyaws_subparsers.add_parser('sm-list-secrets', help='List secrets in Secrets Manager, with filtering.')
     parser_sm_list_secrets.add_argument('--profile', required=True, help='AWS profile.')
     parser_sm_list_secrets.add_argument('--region', default='us-gov-west-1', help='AWS region (default: us-gov-west-1).')
+    parser_sm_list_secrets.add_argument('--include-keywords', nargs='*', help='Space-separated keywords. Secret names containing ANY of these will be included (case-insensitive).')
+    parser_sm_list_secrets.add_argument('--exclude-keywords', nargs='*', help='Space-separated keywords. Secret names containing ANY of these will be excluded (case-insensitive).')
+    parser_sm_list_secrets.add_argument('--fetch-values', action='store_true', help='Actually fetch the content of the secrets. If not set, only metadata is shown.')
+    parser_sm_list_secrets.add_argument('--show-values', action='store_true', help='Display the actual secret values. Requires --fetch-values. USE WITH EXTREME CAUTION.')
     parser_sm_list_secrets.set_defaults(func=sm_list_secrets)
+
 
     parser_sm_get_secret = pyaws_subparsers.add_parser('sm-get-secret', help='Retrieve secrets from Secrets Manager matching a name pattern.')
     parser_sm_get_secret.add_argument('--profile', required=True, help='AWS profile.')

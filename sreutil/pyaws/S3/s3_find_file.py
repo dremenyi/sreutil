@@ -5,7 +5,6 @@ from colorama import Fore, Style, init
 import time
 import fnmatch
 import os # For os.path.basename
-import PrettyTable
 
 def s3_find_file(args):
     profile = args.profile
